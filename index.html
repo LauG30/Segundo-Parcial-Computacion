@@ -11,6 +11,7 @@
         crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.js"></script>
     <script src="threex.keyboardstate.js"></script>
+    <script type="text/javascript" src="physi.js"></script>
 </head>
 
 <body>
@@ -18,102 +19,75 @@
     <div id="myStats"></div>
 
     <script>
-        var fondo, fondoMaterial, fondoMesh;
-        var camara, escena, render, stats;
-        var esferaGeometria, esferaMaterial, esferaMesh;
-        var cuboGeometria, cuboMaterial, cuboMesh;
-        var movGeometria, movMaterial, movMesh;
+        Physijs.scripts.worker = './physijs_worker.js';
+        Physijs.scripts.ammo = './ammo.js';
 
-        let parcial = new THREE.Object3D();
+        var boxGeometry, boxMaterial, box2Geometry, box2Material; 
+        var esferaGeometry, esferaMaterial; 
 
-        inicio();
-        mostrar();
+        var scene = new Physijs.Scene();
+        scene.fog = new THREE.Fog(0xfff000, 10, 140);
+        scene.setGravity(new THREE.Vector3( 0, -10, 0));
+        
+        const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 12;
+        
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        document.body.appendChild( renderer.domElement );
 
-        function inicio() {
+        
+        stats = new Stats();
+        stats.setMode(2); // 0: fps, 1: ms, 2memory
+        stats.domElement.style.position = "absolute";
+        stats.domElement.style.left = "100px";
+        stats.domElement.style.top = "10px";
+        document.getElementById("myStats").appendChild(stats.domElement);
+        
 
-            camara = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10);
-            camara.position.z = 6;
-            escena = new THREE.Scene();
+        boxGeometry = new THREE.BoxGeometry( 6, 0.5, 1 );
+        boxMaterial = new THREE.MeshBasicMaterial( {color: 0xFA5B4E} ) ;
+        const box1 = new Physijs.BoxMesh( boxGeometry , boxMaterial, 0);
+        box1.position.y = 6;
 
-            parcial.add(createStats());
-            parcial.add(crearCubo());
-            parcial.add(crearSegundoCubo());
-            parcial.add(crearEsfera());
 
-            escena.add(parcial);
+        box2Geometry = new THREE.BoxGeometry( 6, 0.5, 1 );
+        box2Material = new THREE.MeshBasicMaterial( {color: 0x4EFAE8} );
+        const box2 = new Physijs.BoxMesh( box2Geometry , box2Material ,0 );
+        box2.position.y = -6;
 
-            render = new THREE.WebGLRenderer({ antialias: true });
-            render.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(render.domElement);
-        }
+        esferaGeometry = new THREE.SphereGeometry( 0.3, 32, 32 );
+        esferaMaterial = new THREE.MeshBasicMaterial( { color: 0xF5FC6A});
+        const esfera = new Physijs.SphereMesh(esferaGeometry , esferaMaterial);
+        
+        scene.add(box1);
+        scene.add(box2);
+        scene.add(esfera);
+     
 
-        function mostrar() {
-            stats.update();
-            requestAnimationFrame(mostrar);
-            render.render(escena, camara);
-        }
-
-        function createStats() {
-            stats = new Stats();
-            stats.setMode(2); // 0: fps, 1: ms, 2memory
-            stats.domElement.style.position = "absolute";
-            stats.domElement.style.left = "100px";
-            stats.domElement.style.top = "10px";
-            document.getElementById("myStats").appendChild(stats.domElement);
-            return stats;
-        }
-
-        function crearEsfera() {
-            let esfera = new THREE.Object3D();
-
-            esferaGeometria = new THREE.SphereGeometry(0.5, 32, 32);
-            esferaMaterial = new THREE.MeshBasicMaterial({ color: 0xF5FC6A });
-            esferaMesh = new THREE.Mesh(esferaGeometria, esferaMaterial);
-            esferaMesh.position.y = 0, 3;
-            esfera.add(esferaMesh);
-
-            return esfera;
-        }
-
-        function crearCubo() {
-            let cubo = new THREE.Object3D();
-
-            cuboGeometria = new THREE.BoxGeometry(6, 0.5, 1);
-            cuboMaterial = new THREE.MeshBasicMaterial({ color: 0xFA5B4E });
-            cuboMesh = new THREE.Mesh(cuboGeometria, cuboMaterial);
-            cuboMesh.position.y = 3;
-            cubo.add(cuboMesh);
-
-            return cubo;
-        }
-
-        function crearSegundoCubo() {
-            let mov = new THREE.Object3D();
-
-            movGeometria = new THREE.BoxGeometry(6, 0.5, 1);
-            movMaterial = new THREE.MeshBasicMaterial({ color: 0x4EFAE8 });
-            movMesh = new THREE.Mesh(movGeometria, movMaterial);
-            movMesh.position.y = -3;
-            mov.add(movMesh);
-
-            return mov;
-        }
-
-        var keyboard = new THREEx.KeyboardState(render.domElement);
-        render.domElement.setAttribute("tabIndex", "0");
-        render.domElement.focus();
-
-        keyboard.domElement.addEventListener('keydown', function (event) {
-            if (event.repeat) {
-                return;
-            }
-            if (keyboard.eventMatches(event, 'left')) {
-                movMesh.position.x -= 0.2;
-            }
-            if (keyboard.eventMatches(event, 'right')) {
-                movMesh.position.x += 0.2;
-            }
-        })
+        var keyboard = new THREEx.KeyboardState();
+        
+    function animate() {
+        
+        requestAnimationFrame( animate );
+        tiempo=0.03;
+        distancia= 100;
+        recorrido=tiempo*distancia;
+                if( keyboard.pressed('left') ){
+                    box2.position.x -=recorrido;		
+                }
+            
+                if( keyboard.pressed('right') ){
+                    box2.position.x +=recorrido;			
+                }
+        
+        renderer.render( scene, camera );
+        stats.update();
+        scene.simulate();
+        
+        
+    }
+    animate();
 
     </script>
 </body>
