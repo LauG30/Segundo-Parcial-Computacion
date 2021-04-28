@@ -2,101 +2,118 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Parcial Computación</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-widt">
+    <title>Segundo Parcial </title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/94/three.min.js"
+        integrity="sha512-ZGgXd6TB5qjtvTU6Q5o/LJM4pwLNy8U8XXJh+vJZDXp2wC8ASrl4WOeivaq2fpYc3TnTCLzyDvVjY8YhvNYaXg=="
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.js"></script>
+    <script src="threex.keyboardstate.js"></script>
 </head>
 
 <body>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/94/three.min.js"
-        integrity="sha512-ZGgXd6TB5qjtvTU6Q5o/LJM4pwLNy8U8XXJh+vJZDXp2wC8ASrl4WOeivaq2fpYc3TnTCLzyDvVjY8YhvNYaXg=="
-        crossorigin="anonymous"></script>
+    <div id="myStats"></div>
+
     <script>
+        var fondo, fondoMaterial, fondoMesh;
+        var camara, escena, render, stats;
+        var esferaGeometria, esferaMaterial, esferaMesh;
+        var cuboGeometria, cuboMaterial, cuboMesh;
+        var movGeometria, movMaterial, movMesh;
 
-        var scene;
-        var camera;
-        var renderer;
-        var material;
+        let parcial = new THREE.Object3D();
 
-        function createCamera() {
-            camera = new THREE.PerspectiveCamera(
-                75,
-                window.innerWidth / window.innerHeight,
-                1,
-                100
-            );
-            camera.position.set(0, 0, 20);
+        inicio();
+        mostrar();
+
+        function inicio() {
+
+            camara = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10);
+            camara.position.z = 6;
+            escena = new THREE.Scene();
+
+            parcial.add(createStats());
+            parcial.add(crearCubo());
+            parcial.add(crearSegundoCubo());
+            parcial.add(crearEsfera());
+
+            escena.add(parcial);
+
+            render = new THREE.WebGLRenderer({ antialias: true });
+            render.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(render.domElement);
         }
 
-        function createRenderer() {
-            renderer = new THREE.WebGLRenderer();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
+        function mostrar() {
+            stats.update();
+            requestAnimationFrame(mostrar);
+            render.render(escena, camara);
         }
 
-        function createLightDirectional() {
-            let directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-            directionalLight.name = "luz direccional";
-            directionalLight.position.set(-15, 10, 0);
-            scene.add(directionalLight);
+        function createStats() {
+            stats = new Stats();
+            stats.setMode(2); // 0: fps, 1: ms, 2memory
+            stats.domElement.style.position = "absolute";
+            stats.domElement.style.left = "100px";
+            stats.domElement.style.top = "10px";
+            document.getElementById("myStats").appendChild(stats.domElement);
+            return stats;
         }
 
-        function createLightSpot() {
-            let spotLight = new THREE.SpotLight(0xff0000);
-            spotLight.castShadow = true;
-            spotLight.shadow.mapSize.width = 1024;
-            spotLight.shadow.mapSize.height = 1024;
-            spotLight.shadow.camera.near = 50;
-            spotLight.shadow.camera.far = 400;
-            spotLight.shadow.camera.fov = 3;
-            spotLight.position.set(0, 10, 5);
-            spotLight.name = "luz lugar";
-            scene.add(spotLight);
+        function crearEsfera() {
+            let esfera = new THREE.Object3D();
+
+            esferaGeometria = new THREE.SphereGeometry(0.5, 32, 32);
+            esferaMaterial = new THREE.MeshBasicMaterial({ color: 0xF5FC6A });
+            esferaMesh = new THREE.Mesh(esferaGeometria, esferaMaterial);
+            esferaMesh.position.y = 0, 3;
+            esfera.add(esferaMesh);
+
+            return esfera;
         }
 
-        function init() {
-            scene = new THREE.Scene();
-            createCamera();
-            createLightDirectional();
-            createLightSpot();
-            createRenderer();
-            createSphere()
-            createRectangle();
-            createRectangle2();
+        function crearCubo() {
+            let cubo = new THREE.Object3D();
+
+            cuboGeometria = new THREE.BoxGeometry(6, 0.5, 1);
+            cuboMaterial = new THREE.MeshBasicMaterial({ color: 0xFA5B4E });
+            cuboMesh = new THREE.Mesh(cuboGeometria, cuboMaterial);
+            cuboMesh.position.y = 3;
+            cubo.add(cuboMesh);
+
+            return cubo;
         }
 
-        function animate(time) {
-            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
+        function crearSegundoCubo() {
+            let mov = new THREE.Object3D();
+
+            movGeometria = new THREE.BoxGeometry(6, 0.5, 1);
+            movMaterial = new THREE.MeshBasicMaterial({ color: 0x4EFAE8 });
+            movMesh = new THREE.Mesh(movGeometria, movMaterial);
+            movMesh.position.y = -3;
+            mov.add(movMesh);
+
+            return mov;
         }
 
-        function createSphere() {
-            const geometry = new THREE.SphereGeometry(1, 32, 32);
-            const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-            const sphere = new THREE.Mesh(geometry, material);
-            scene.add(sphere);
-        }
+        var keyboard = new THREEx.KeyboardState(render.domElement);
+        render.domElement.setAttribute("tabIndex", "0");
+        render.domElement.focus();
 
-        function createRectangle() {
-            const geometry = new THREE.BoxGeometry(20, 2, 1);
-            const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-            const cube = new THREE.Mesh(geometry, material);
-            cube.position.y = 11;
-            scene.add(cube);
-        }
-
-        function createRectangle2() {
-            const geometry = new THREE.BoxGeometry(20, 2, 1);
-            const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-            const cube = new THREE.Mesh(geometry, material);
-            cube.position.y = -11;
-            scene.add(cube);
-        }
-
-        init();
-        requestAnimationFrame(animate);
+        keyboard.domElement.addEventListener('keydown', function (event) {
+            if (event.repeat) {
+                return;
+            }
+            if (keyboard.eventMatches(event, 'left')) {
+                movMesh.position.x -= 0.2;
+            }
+            if (keyboard.eventMatches(event, 'right')) {
+                movMesh.position.x += 0.2;
+            }
+        })
 
     </script>
 </body>
